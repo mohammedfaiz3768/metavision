@@ -1,0 +1,70 @@
+<USER_REQUEST>
+{
+  "meta": {
+    "prompt_version": "1.0.1",
+    "project_name": "FF Intel",
+    "prompt_purpose": "Master build prompt for AI agent in Antigravity IDE",
+    "author": "Mohammed Faiz Ahmed",
+    "critical_instruction": "READ THIS ENTIRE JSON BEFORE WRITING A SINGLE LINE OF CODE. Every section is mandatory. Do not hallucinate libraries, APIs, or patterns not listed here. If something is unclear, default to the simplest implementation described. Do not add features not listed. Do not use placeholder or mock data unless explicitly told to. Work until each phase is fully complete before moving to the next."
+  },
+
+  "project_overview": {
+    "product_name": "FF Intel",
+    "tagline": "Tactical Analytics Platform for Free Fire Esports",
+    "description": "A professional tactical whiteboard, match analytics, and AI coaching platform built exclusively for Free Fire competitive teams, coaches, and analysts. This is NOT a generic gaming website. It is a structured workflow tool for esports preparation and review.",
+    "product_feel": [
+      "Esports analyst operating system",
+      "Tactical command center",
+      "Team coaching workspace"
+    ],
+    "product_must_not_feel": [
+      "Generic gaming site",
+      "RGB flashy gamer aesthetic",
+      "Over-animated or cluttered"
+    ]
+  },
+
+  "strict_rules": {
+    "description": "These rules are NON-NEGOTIABLE. Violating any of these is a build failure.",
+    "rules": [
+      "NEVER use mock data or hardcoded fake users/teams/boards in production code. Use real Supabase queries only.",
+      "NEVER install or import any library not listed in the approved_libraries section.",
+      "NEVER create a custom WebSocket server. Use Supabase Realtime exclusively for all realtime features.",
+      "NEVER use Redux. Use Zustand for all client state management.",
+      "NEVER use pages/ directory router. Use Next.js App Router (app/) exclusively.",
+      "NEVER skip TypeScript types. Every function, prop, and API response must be fully typed.",
+      "NEVER hardcode use
+<truncated 36142 bytes>
+m install lucide-react",
+      "npx shadcn@latest init",
+      "npx shadcn@latest add button card input label select dialog toast skeleton table badge tabs separator"
+    ]
+  },
+
+  "final_agent_instructions": [
+    "READ THIS ENTIRE JSON DOCUMENT BEFORE WRITING ANY CODE.",
+    "Start with Phase 1 only. Do not build Phase 2 or Phase 3 features until Phase 1 definition_of_done is fully met.",
+    "Build Phase 1 in this order: project setup → auth → team creation → dashboard layout → boards list → whiteboard canvas → drawing tools → save/load → realtime → export → share → team management.",
+    "After writing each file, verify it uses only approved_libraries and all values are fully typed.",
+    "Every Supabase query must enforce that the authenticated user has permission via RLS.",
+    "The whiteboard (boards/[id]/page.tsx + WhiteboardCanvas.tsx) is the highest priority feature. It must be fully working before any other feature.",
+    "Do not ask clarifying questions. All decisions are documented in this JSON. Default to the simplest described implementation.",
+    "Do not build any feature not mentioned in this JSON.",
+    "Map images (bermuda.jpg, purgatory.jpg, kalahari.jpg, nexterra.jpg, solara.jpg) are provided by the developer and placed in public/maps/. Load them from /maps/{map_id}.jpg.",
+    "All UI text uses sentence case. No ALL CAPS headings.",
+    "The product name is FF Intel. Use this consistently across all UI, metadata, and page titles.",
+    "Work until the current phase is fully complete. Do not stop midway."
+  ]
+}
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-05-29T01:19:10+05:30.
+
+The user's current state is as follows:
+Active Document: c:\Users\khanf\fee recipet system\index.html (LANGUAGE_HTML)
+Cursor is on line: 1
+Other open documents:
+- c:\Users\khanf\fee recipet system\index.html (LANGUAGE_HTML)
+- c:\Users\khanf\fee recipet system\style.css (LANGUAGE_CSS)
+- c:\Users\khanf\fee recipet system\script.js (LANGUAGE_JAVASCRIPT)
+</ADDITIONAL_METADATA>
