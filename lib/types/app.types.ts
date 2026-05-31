@@ -231,7 +231,7 @@ export interface TeamInvite {
 
 export type LayerType = 'rotations' | 'enemy_routes' | 'zones' | 'utility' | 'notes' | 'custom';
 
-export type ToolType = 'select' | 'freedraw' | 'rotation' | 'arrow' | 'circle' | 'rect' | 'text' | 'marker';
+export type ToolType = 'select' | 'freedraw' | 'rotation' | 'arrow' | 'circle' | 'rect' | 'text' | 'marker' | 'pan';
 
 export type CanvasNodeType = 'freedraw' | 'rotation' | 'arrow' | 'circle' | 'rect' | 'text' | 'marker';
 

@@ -26,7 +26,10 @@ import {
   ZoomOut,
   Save,
   Grid,
-  ChevronDown
+  ChevronDown,
+  Crosshair,
+  Redo2,
+  Undo2
 } from "lucide-react";
 import type { ToolType } from "@/lib/types/app.types";
 
@@ -70,6 +73,10 @@ export function WhiteboardToolbar() {
     setViewport,
     snapToGrid,
     toggleSnapToGrid,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useCanvasStore();
 
   const [colorPopoverOpen, setColorPopoverOpen] = useState(false);
@@ -89,7 +96,7 @@ export function WhiteboardToolbar() {
   };
 
   return (
-    <div className="flex flex-col gap-3 bg-white/95 backdrop-blur-md border border-slate-200/80 p-4 rounded-[20px] shadow-2xl select-none w-[520px]">
+    <div className="flex flex-col gap-3 bg-white/95 backdrop-blur-md border border-slate-200/80 p-4 rounded-[20px] shadow-2xl select-none w-[570px]">
       
       {/* ROW 1: PRIMARY TOOLS */}
       <div className="flex items-center justify-between pb-2 border-b border-slate-100">
@@ -111,6 +118,25 @@ export function WhiteboardToolbar() {
             <Pencil className="h-4.5 w-4.5" />
           </div>
           <span className="text-[9px] font-black tracking-wider uppercase font-sans leading-none">Draw</span>
+        </button>
+
+        {/* PAN / CROSSHAIR TOOL */}
+        <button
+          type="button"
+          onClick={() => setTool("pan")}
+          className={cn(
+            "flex flex-col items-center gap-1 group cursor-pointer",
+            activeTool === "pan" ? "text-[#6366F1]" : "text-slate-500 hover:text-slate-900"
+          )}
+          title="Pan Map Canvas (Hold Spacebar or select to drag map)"
+        >
+          <div className={cn(
+            "h-10 w-10 rounded-full flex items-center justify-center transition-all",
+            activeTool === "pan" ? "bg-slate-900 text-white animate-pulse" : "bg-slate-50 hover:bg-slate-100 border border-slate-200/60"
+          )}>
+            <Crosshair className="h-4.5 w-4.5" />
+          </div>
+          <span className="text-[9px] font-black tracking-wider uppercase font-sans leading-none">Pan</span>
         </button>
 
         {/* ERASE / SELECT TOOL */}
@@ -404,6 +430,32 @@ export function WhiteboardToolbar() {
             title={snapToGrid ? "Align to grid active" : "Align drawings to grid"}
           >
             <Grid className="h-4 w-4" />
+          </button>
+
+          {/* Undo drawing action */}
+          <button
+            type="button"
+            onClick={undo}
+            disabled={!canUndo()}
+            className={cn(
+              "h-8 w-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-800 flex items-center justify-center cursor-pointer shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-slate-500"
+            )}
+            title="Undo last action (Ctrl+Z)"
+          >
+            <Undo2 className="h-4 w-4" />
+          </button>
+
+          {/* Redo drawing action */}
+          <button
+            type="button"
+            onClick={redo}
+            disabled={!canRedo()}
+            className={cn(
+              "h-8 w-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-800 flex items-center justify-center cursor-pointer shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-slate-500"
+            )}
+            title="Redo action (Ctrl+Y)"
+          >
+            <Redo2 className="h-4 w-4" />
           </button>
 
           {/* Erase selected nodes utility */}

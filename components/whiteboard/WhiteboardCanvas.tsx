@@ -311,7 +311,31 @@ export function WhiteboardCanvas({
     selectTool.handleNodeDragEnd(nodeId, targetX, targetY);
   };
 
-  const isStageDraggable = spacePressed || activeTool === "select" && selectedNodeIds.length === 0;
+  const handleStageDragStart = (e: any) => {
+    const target = e.target;
+    const id = target.id();
+    if (id && nodes.some((n) => n.id === id)) {
+      // It's a node! Push history once at the start of the drag
+      useCanvasStore.getState().pushHistory();
+
+      // If we are in select mode, initialize group dragging
+      if (activeTool === "select") {
+        selectTool.handleNodeDragStart(id);
+      }
+    }
+  };
+
+  const handleStageDragMove = (e: any) => {
+    const target = e.target;
+    const id = target.id();
+    if (id && nodes.some((n) => n.id === id) && activeTool === "select") {
+      const currentXNorm = target.x() / canvasWidth;
+      const currentYNorm = target.y() / canvasHeight;
+      selectTool.handleNodeDragMove(id, currentXNorm, currentYNorm);
+    }
+  };
+
+  const isStageDraggable = spacePressed || activeTool === "pan" || (activeTool === "select" && selectedNodeIds.length === 0);
 
   return (
     <div ref={containerRef} className="absolute inset-0 w-full h-full overflow-hidden bg-[#0d0e12] select-none">
@@ -382,6 +406,8 @@ export function WhiteboardCanvas({
         scaleY={viewport.scaleY}
         draggable={isStageDraggable}
         onWheel={handleWheel}
+        onDragStart={handleStageDragStart}
+        onDragMove={handleStageDragMove}
         onDragEnd={handleDragEnd}
         onMouseDown={(e) => handleStageEvent(e, "onMouseDown")}
         onMouseMove={(e) => handleStageEvent(e, "onMouseMove")}
@@ -393,7 +419,7 @@ export function WhiteboardCanvas({
         onTap={(e) => handleStageEvent(e, "onTap")}
         className={cn(
           "shadow-2xl border border-border overflow-hidden bg-secondary/10",
-          spacePressed ? "cursor-grab active:cursor-grabbing" : "cursor-default"
+          (spacePressed || activeTool === "pan") ? "cursor-grab active:cursor-grabbing" : "cursor-default"
         )}
       >
         {/* Layer 1: Map Image and grid lines */}
@@ -541,6 +567,9 @@ export function WhiteboardCanvas({
           {/* Konva Transformer overlay */}
           <Transformer
             ref={transformerRef}
+            onTransformStart={() => {
+              useCanvasStore.getState().pushHistory();
+            }}
             borderStroke="hsl(210, 100%, 60%)"
             anchorStroke="hsl(210, 100%, 60%)"
             anchorFill="#000"

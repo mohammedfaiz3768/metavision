@@ -211,9 +211,16 @@ export function useRealtime({
     });
   }, [nodes]);
 
+  const lastTrackTime = useRef<number>(0);
+
   // ---- 6. Broadcast Cursor Positions ----
   const handleStageMouseMove = (e: any) => {
     if (!channelRef.current) return;
+
+    // Throttle cursor track updates to once every 80ms to avoid network/thread bottleneck
+    const now = Date.now();
+    if (now - lastTrackTime.current < 80) return;
+    lastTrackTime.current = now;
 
     const stage = stageRef.current;
     if (!stage) return;
@@ -231,7 +238,7 @@ export function useRealtime({
     const xNorm = Math.max(0, Math.min(1, stagePos.x / stageWidth));
     const yNorm = Math.max(0, Math.min(1, stagePos.y / stageHeight));
 
-    // Update Presence information (throttled inside Supabase implicitly)
+    // Update Presence information
     channelRef.current.track({
       username,
       color: localCursorColor.current,

@@ -109,7 +109,6 @@ export function RotationRenderer({
           strokeLinecap="round"
           strokeLinejoin="round"
           dash={[6 / scale, 4 / scale]}
-          tension={0.4}
         />
       )}
 
@@ -121,7 +120,6 @@ export function RotationRenderer({
         opacity={0.4}
         strokeLinecap="round"
         strokeLinejoin="round"
-        tension={0.4}
       />
 
       {/* 3. Main Solid Base Path (opacity 0.92, strokeWidth 5) */}
@@ -132,7 +130,6 @@ export function RotationRenderer({
         opacity={0.92}
         strokeLinecap="round"
         strokeLinejoin="round"
-        tension={0.4}
       />
 
       {/* 4. Bold White Marching Dashes Overlay */}
@@ -144,7 +141,6 @@ export function RotationRenderer({
         strokeLinecap="round"
         strokeLinejoin="round"
         dash={[10 / scale, 6 / scale]}
-        tension={0.4}
       />
 
       {/* 5. End Triangular Arrowhead */}

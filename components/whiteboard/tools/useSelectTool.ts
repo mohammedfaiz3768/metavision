@@ -158,9 +158,15 @@ export function useSelectTool({ stageRef, nodes }: ToolProps) {
     dragStartPositions.current = positions;
   };
 
-  const handleNodeDragMove = (nodeId: string, dxNorm: number, dyNorm: number) => {
+  const handleNodeDragMove = (nodeId: string, currentX: number, currentY: number) => {
     // If the dragged node is not part of the selection, do nothing
     if (!selectedNodeIds.includes(nodeId)) return;
+
+    const mainStart = dragStartPositions.current[nodeId];
+    if (!mainStart) return;
+
+    const dxNorm = currentX - mainStart.x;
+    const dyNorm = currentY - mainStart.y;
 
     // Update all other selected nodes by the same normalized displacement delta
     selectedNodeIds.forEach((id) => {
