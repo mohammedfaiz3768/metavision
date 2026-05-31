@@ -318,8 +318,8 @@ export function WhiteboardCanvas({
       // It's a node! Push history once at the start of the drag
       useCanvasStore.getState().pushHistory();
 
-      // If we are in select mode, initialize group dragging
-      if (activeTool === "select") {
+      // If we are in select or pan mode, initialize group dragging
+      if (activeTool === "select" || activeTool === "pan") {
         selectTool.handleNodeDragStart(id);
       }
     }
@@ -328,7 +328,7 @@ export function WhiteboardCanvas({
   const handleStageDragMove = (e: any) => {
     const target = e.target;
     const id = target.id();
-    if (id && nodes.some((n) => n.id === id) && activeTool === "select") {
+    if (id && nodes.some((n) => n.id === id) && (activeTool === "select" || activeTool === "pan")) {
       const currentXNorm = target.x() / canvasWidth;
       const currentYNorm = target.y() / canvasHeight;
       selectTool.handleNodeDragMove(id, currentXNorm, currentYNorm);
@@ -480,7 +480,7 @@ export function WhiteboardCanvas({
                 stageHeight={canvasHeight}
                 isSelected={isSelected}
                 onSelect={() => selectNode(node.id, false)}
-                draggable={activeTool === "select"}
+                draggable={activeTool === "select" || activeTool === "pan"}
                 onDragEnd={(xNorm, yNorm) => handleNodeDragEnd(node.id, xNorm, yNorm)}
                 onTextDblClick={textTool.handleTextDblClick}
                 editingTextNodeId={textTool.editingNodeId}
