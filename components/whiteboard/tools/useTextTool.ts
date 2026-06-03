@@ -59,10 +59,9 @@ export function useTextTool({ stageRef, userId }: ToolProps) {
 
   // 2. Click empty area to spawn a NEW text node
   const handleStageClick = (e: any) => {
-    // Spawn text if we clicked directly on the stage background, background rect, or the map image
-    const isStage = e.target === stageRef.current;
-    const isMapBackground = e.target.getClassName && (e.target.getClassName() === "Image" || e.target.id() === "background-rect" || e.target.id() === "background-layer");
-    if (!isStage && !isMapBackground) return;
+    // Allow spawning a new text node anywhere EXCEPT on an existing text node
+    const isTextNode = e.target && e.target.getClassName && e.target.getClassName() === "Text";
+    if (isTextNode) return;
 
     const stage = stageRef.current;
     if (!stage) return;

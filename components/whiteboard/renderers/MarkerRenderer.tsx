@@ -14,6 +14,7 @@ interface RendererProps {
   onSelect: () => void;
   draggable: boolean;
   onDragEnd: (x: number, y: number) => void;
+  listening?: boolean;
 }
 
 export function MarkerRenderer({
@@ -24,6 +25,7 @@ export function MarkerRenderer({
   onSelect,
   draggable,
   onDragEnd,
+  listening = true,
 }: RendererProps) {
   const { viewport } = useCanvasStore();
   const scale = viewport.scaleX || 1;
@@ -48,11 +50,14 @@ export function MarkerRenderer({
       x={screenPos.x}
       y={screenPos.y}
       draggable={draggable}
+      listening={listening}
       onClick={(e) => {
+        if (listening === false) return;
         e.cancelBubble = true;
         onSelect();
       }}
       onTap={(e) => {
+        if (listening === false) return;
         e.cancelBubble = true;
         onSelect();
       }}

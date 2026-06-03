@@ -14,6 +14,8 @@ interface TextRendererProps {
   onDragEnd: (x: number, y: number) => void;
   onDblClick: (e: any) => void;
   isEditing: boolean;
+  readOnly?: boolean;
+  listening?: boolean;
 }
 
 export function TextRenderer({
@@ -26,6 +28,8 @@ export function TextRenderer({
   onDragEnd,
   onDblClick,
   isEditing,
+  readOnly = false,
+  listening = true,
 }: TextRendererProps) {
   const screenPos = normalizedToScreen(node.x, node.y, stageWidth, stageHeight);
   const fontSize = node.fontSize ?? 16;
@@ -44,18 +48,37 @@ export function TextRenderer({
       textDecoration={linkedUrl ? "underline" : "none"} // Underline clickable link nodes
       opacity={isEditing ? 0 : (node.opacity ?? 1)}
       draggable={draggable}
+      listening={listening}
       onClick={(e) => {
+        if (listening === false) return;
         e.cancelBubble = true;
         if (linkedUrl) {
-          window.open(linkedUrl, "_blank");
+          if (readOnly) {
+            window.open(linkedUrl, "_blank");
+          } else {
+            if (isSelected) {
+              window.open(linkedUrl, "_blank");
+            } else {
+              onSelect();
+            }
+          }
         } else {
           onSelect();
         }
       }}
       onTap={(e) => {
+        if (listening === false) return;
         e.cancelBubble = true;
         if (linkedUrl) {
-          window.open(linkedUrl, "_blank");
+          if (readOnly) {
+            window.open(linkedUrl, "_blank");
+          } else {
+            if (isSelected) {
+              window.open(linkedUrl, "_blank");
+            } else {
+              onSelect();
+            }
+          }
         } else {
           onSelect();
         }

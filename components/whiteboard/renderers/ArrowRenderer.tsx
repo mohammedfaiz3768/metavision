@@ -12,6 +12,7 @@ interface RendererProps {
   onSelect: () => void;
   draggable: boolean;
   onDragEnd: (x: number, y: number) => void;
+  listening?: boolean;
 }
 
 export function ArrowRenderer({
@@ -22,6 +23,7 @@ export function ArrowRenderer({
   onSelect,
   draggable,
   onDragEnd,
+  listening = true,
 }: RendererProps) {
   if (!node.points) return null;
 
@@ -41,11 +43,14 @@ export function ArrowRenderer({
       strokeWidth={node.strokeWidth}
       opacity={node.opacity ?? 1}
       draggable={draggable}
+      listening={listening}
       onClick={(e) => {
+        if (listening === false) return;
         e.cancelBubble = true;
         onSelect();
       }}
       onTap={(e) => {
+        if (listening === false) return;
         e.cancelBubble = true;
         onSelect();
       }}

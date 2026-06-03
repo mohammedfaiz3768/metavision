@@ -18,7 +18,7 @@ import { useSelectTool } from "./tools/useSelectTool";
 import { NodeRenderer } from "./renderers/NodeRenderer";
 import { CursorOverlay } from "./CursorOverlay";
 import { getMapConfig } from "@/lib/whiteboard/map-config";
-import { Loader2 } from "lucide-react";
+import { Loader2, Copy, Clipboard, Trash2, ArrowUp, ArrowDown, Lock, Unlock, CopyPlus, ExternalLink } from "lucide-react";
 import type { MapId } from "@/lib/types/app.types";
 import { calculateAuthoritativeBounds } from "@/lib/whiteboard/validation";
 
@@ -45,6 +45,7 @@ export function WhiteboardCanvas({
   const transformerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 1024, height: 1024 });
+  const [activeAnchor, setActiveAnchor] = useState<string | null>(null);
 
   const {
     nodes,
@@ -58,6 +59,15 @@ export function WhiteboardCanvas({
     selectNode,
     deselectAll,
     updateNode,
+    layers,
+    deleteNode,
+    copyStyle,
+    pasteStyle,
+    styleClipboard,
+    bringToFront,
+    sendToBack,
+    duplicateNode,
+    toggleNodeLock,
   } = useCanvasStore();
 
   // Load Map config and Preload image
@@ -115,6 +125,15 @@ export function WhiteboardCanvas({
   }, [mounted]);
 
   const handleKeyDown = (e: KeyboardEvent) => {
+    const target = e.target as HTMLElement;
+    if (
+      target &&
+      (target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable)
+    ) {
+      return;
+    }
     if (e.code === "Space") {
       setSpacePressed(true);
       if (e.target === document.body) {
@@ -140,6 +159,92 @@ export function WhiteboardCanvas({
 
   // Keyboard undo/redo/delete shortcuts
   useKeyboardShortcuts();
+
+  // Middle-mouse drag panning state
+  const [isMiddleDragging, setIsMiddleDragging] = useState(false);
+  const middleDragStart = useRef({ x: 0, y: 0 });
+  const middleDragViewport = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleWindowMouseUp = () => {
+      setIsMiddleDragging(false);
+    };
+    window.addEventListener("mouseup", handleWindowMouseUp);
+    return () => {
+      window.removeEventListener("mouseup", handleWindowMouseUp);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isMiddleDragging) return;
+
+    const handleWindowMouseMove = (e: MouseEvent) => {
+      if (hasUserInteracted.current === false) {
+        hasUserInteracted.current = true;
+      }
+      const dx = e.clientX - middleDragStart.current.x;
+      const dy = e.clientY - middleDragStart.current.y;
+      setViewport({
+        x: middleDragViewport.current.x + dx,
+        y: middleDragViewport.current.y + dy,
+      });
+    };
+
+    window.addEventListener("mousemove", handleWindowMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", handleWindowMouseMove);
+    };
+  }, [isMiddleDragging]);
+
+  const isNodeLocked = (node: any) => {
+    if (node.isLocked) return true;
+    const layer = layers.find((l) => l.id === node.layer);
+    return layer ? layer.isLocked : false;
+  };
+
+  const selectedNode = nodes.find((n) => selectedNodeIds.includes(n.id));
+  const isSelectedNodeLocked = selectedNode ? isNodeLocked(selectedNode) : false;
+
+  const getSelectedNodeCenter = () => {
+    if (selectedNodeIds.length !== 1 || !selectedNode) return null;
+    const node = selectedNode;
+
+    let cx = node.x;
+    let cy = node.y;
+    let w = 0;
+    let h = 0;
+
+    if (node.type === "rect") {
+      w = node.width ?? 0.1;
+      h = node.height ?? 0.1;
+      cx = node.x + w / 2;
+      cy = node.y;
+    } else if (node.type === "circle" || (node.type as string) === "logo-marker") {
+      const isLogo = (node.type as string) === "logo-marker";
+      const ry = isLogo ? (node.radius ?? 0.035) : (node.radiusY ?? node.radius ?? 0.05);
+      cx = node.x;
+      cy = node.y - ry;
+    } else if (node.type === "text") {
+      w = node.width ?? 0.15;
+      h = node.height ?? 0.05;
+      cx = node.x + w / 2;
+      cy = node.y;
+    } else if (node.points && node.points.length >= 4) {
+      const minX = node.min_x ?? calculateAuthoritativeBounds(node).min_x;
+      const maxX = node.max_x ?? calculateAuthoritativeBounds(node).max_x;
+      const minY = node.min_y ?? calculateAuthoritativeBounds(node).min_y;
+      cx = (minX + maxX) / 2;
+      cy = minY;
+    }
+
+    const localScale = viewport.scaleX || 1;
+    const screenX = cx * 1024 * localScale + viewport.x;
+    const screenY = cy * 1024 * localScale + viewport.y;
+
+    return { x: screenX, y: screenY };
+  };
+
+  const pos = getSelectedNodeCenter();
 
   // ---- Initialize Tool Hooks ----
   const selectTool = useSelectTool({ stageRef: activeStageRef, nodes });
@@ -281,6 +386,38 @@ export function WhiteboardCanvas({
   };
 
   const handleStageEvent = (e: any, handlerName: string) => {
+    // Intercept middle-click for panning
+    if (e.evt) {
+      if (handlerName === "onMouseDown" && e.evt.button === 1) {
+        e.evt.preventDefault();
+        setIsMiddleDragging(true);
+        middleDragStart.current = { x: e.evt.clientX, y: e.evt.clientY };
+        middleDragViewport.current = { x: viewport.x, y: viewport.y };
+        return;
+      }
+      
+      if (handlerName === "onMouseMove" && isMiddleDragging) {
+        e.evt.preventDefault();
+        const dx = e.evt.clientX - middleDragStart.current.x;
+        const dy = e.evt.clientY - middleDragStart.current.y;
+        setViewport({
+          x: middleDragViewport.current.x + dx,
+          y: middleDragViewport.current.y + dy,
+        });
+        
+        if (realtimeMouseMoveHandler) {
+          realtimeMouseMoveHandler(e);
+        }
+        return;
+      }
+      
+      if (handlerName === "onMouseUp" && isMiddleDragging) {
+        e.evt.preventDefault();
+        setIsMiddleDragging(false);
+        return;
+      }
+    }
+
     // 1. Core draw/select handler
     const drawHandlers = getStageDrawHandlers() as any;
     if (drawHandlers[handlerName]) {
@@ -314,7 +451,12 @@ export function WhiteboardCanvas({
   const handleStageDragStart = (e: any) => {
     const target = e.target;
     const id = target.id();
-    if (id && nodes.some((n) => n.id === id)) {
+    const node = nodes.find((n) => n.id === id);
+    if (node) {
+      if (isNodeLocked(node)) {
+        target.stopDrag();
+        return;
+      }
       // It's a node! Push history once at the start of the drag
       useCanvasStore.getState().pushHistory();
 
@@ -328,7 +470,8 @@ export function WhiteboardCanvas({
   const handleStageDragMove = (e: any) => {
     const target = e.target;
     const id = target.id();
-    if (id && nodes.some((n) => n.id === id) && (activeTool === "select" || activeTool === "pan")) {
+    const node = nodes.find((n) => n.id === id);
+    if (node && !isNodeLocked(node) && (activeTool === "select" || activeTool === "pan")) {
       const currentXNorm = target.x() / canvasWidth;
       const currentYNorm = target.y() / canvasHeight;
       selectTool.handleNodeDragMove(id, currentXNorm, currentYNorm);
@@ -419,7 +562,7 @@ export function WhiteboardCanvas({
         onTap={(e) => handleStageEvent(e, "onTap")}
         className={cn(
           "shadow-2xl border border-border overflow-hidden bg-secondary/10",
-          (spacePressed || activeTool === "pan") ? "cursor-grab active:cursor-grabbing" : "cursor-default"
+          (spacePressed || activeTool === "pan") ? "cursor-grab active:cursor-grabbing" : activeTool === "eraser" ? "cursor-crosshair" : "cursor-default"
         )}
       >
         {/* Layer 1: Map Image and grid lines */}
@@ -472,6 +615,7 @@ export function WhiteboardCanvas({
         <Layer id="drawing-layer">
           {visibleNodes.map((node) => {
             const isSelected = selectedNodeIds.includes(node.id);
+            const listening = activeTool === "select" || activeTool === "eraser" || (activeTool === "text" && node.type === "text");
             return (
               <NodeRenderer
                 key={node.id}
@@ -479,11 +623,18 @@ export function WhiteboardCanvas({
                 stageWidth={canvasWidth}
                 stageHeight={canvasHeight}
                 isSelected={isSelected}
-                onSelect={() => selectNode(node.id, false)}
-                draggable={activeTool === "select" || activeTool === "pan"}
+                onSelect={() => {
+                  if (activeTool === "eraser") {
+                    deleteNode(node.id);
+                  } else {
+                    selectNode(node.id, false);
+                  }
+                }}
+                draggable={(activeTool === "select" || activeTool === "pan") && !isNodeLocked(node)}
                 onDragEnd={(xNorm, yNorm) => handleNodeDragEnd(node.id, xNorm, yNorm)}
                 onTextDblClick={textTool.handleTextDblClick}
                 editingTextNodeId={textTool.editingNodeId}
+                listening={listening}
               />
             );
           })}
@@ -567,26 +718,38 @@ export function WhiteboardCanvas({
           {/* Konva Transformer overlay */}
           <Transformer
             ref={transformerRef}
-            onTransformStart={() => {
+            onTransformStart={(e) => {
               useCanvasStore.getState().pushHistory();
+              const anchor = transformerRef.current?.getActiveAnchor();
+              if (anchor) {
+                setActiveAnchor(anchor);
+              }
             }}
-            borderStroke="hsl(210, 100%, 60%)"
-            anchorStroke="hsl(210, 100%, 60%)"
-            anchorFill="#000"
-            anchorSize={8}
+            borderStroke={isSelectedNodeLocked ? "#f59e0b" : "hsl(210, 100%, 60%)"}
+            borderDash={isSelectedNodeLocked ? [4, 4] : undefined}
+            anchorStroke={isSelectedNodeLocked ? "#f59e0b" : "hsl(210, 100%, 60%)"}
+            anchorFill={isSelectedNodeLocked ? "transparent" : "#000"}
+            anchorSize={isSelectedNodeLocked ? 0 : 8}
+            resizeEnabled={!isSelectedNodeLocked}
+            rotateEnabled={!isSelectedNodeLocked}
             rotateAnchorOffset={15}
-            keepRatio={false}
-            enabledAnchors={[
+            keepRatio={
+              !activeAnchor || 
+              !(selectedNode?.type === "circle" || selectedNode?.type === "rect") || 
+              !["top-center", "bottom-center", "middle-left", "middle-right"].includes(activeAnchor)
+            }
+            enabledAnchors={isSelectedNodeLocked ? [] : [
               "top-left",
               "top-right",
               "bottom-left",
               "bottom-right",
               "top-center",
               "bottom-center",
-              "left-center",
-              "right-center",
+              "middle-left",
+              "middle-right",
             ]}
             onTransformEnd={(e) => {
+              setActiveAnchor(null);
               // Get transformed scale / size and update node in Zustand
               const activeId = selectedNodeIds[0];
               const node = nodes.find((n) => n.id === activeId);
@@ -609,9 +772,29 @@ export function WhiteboardCanvas({
                   y: finalY,
                   width: finalW,
                   height: finalH,
+                  rotation: transformerNode.rotation(),
                 });
               } else if (node.type === "circle") {
-                const finalRadius = (transformerNode.width() * transformerNode.scaleX()) / 2 / canvasWidth;
+                const baseRadiusX = node.radiusX ?? node.radius ?? 0.05;
+                const baseRadiusY = node.radiusY ?? node.radius ?? 0.05;
+                const finalRadiusX = baseRadiusX * transformerNode.scaleX();
+                const finalRadiusY = baseRadiusY * transformerNode.scaleY();
+                const finalX = transformerNode.x() / canvasWidth;
+                const finalY = transformerNode.y() / canvasHeight;
+
+                transformerNode.scaleX(1);
+                transformerNode.scaleY(1);
+
+                updateNode(activeId, {
+                  x: finalX,
+                  y: finalY,
+                  radiusX: finalRadiusX,
+                  radiusY: finalRadiusY,
+                  rotation: transformerNode.rotation(),
+                });
+              } else if ((node.type as string) === "logo-marker") {
+                const baseRadius = node.radius ?? 0.035;
+                const finalRadius = baseRadius * transformerNode.scaleX();
                 const finalX = transformerNode.x() / canvasWidth;
                 const finalY = transformerNode.y() / canvasHeight;
 
@@ -622,9 +805,24 @@ export function WhiteboardCanvas({
                   x: finalX,
                   y: finalY,
                   radius: finalRadius,
+                  rotation: transformerNode.rotation(),
+                });
+              } else if (node.type === "text") {
+                const finalFontSize = Math.round((node.fontSize ?? 16) * transformerNode.scaleX());
+                const finalX = transformerNode.x() / canvasWidth;
+                const finalY = transformerNode.y() / canvasHeight;
+
+                transformerNode.scaleX(1);
+                transformerNode.scaleY(1);
+
+                updateNode(activeId, {
+                  x: finalX,
+                  y: finalY,
+                  fontSize: finalFontSize,
+                  rotation: transformerNode.rotation(),
                 });
               } else {
-                // Update rotation angle (degrees) for all node types
+                // Update rotation angle (degrees) for all other node types
                 updateNode(activeId, {
                   rotation: transformerNode.rotation(),
                 });
@@ -654,6 +852,121 @@ export function WhiteboardCanvas({
           stageHeight={canvasHeight}
         />
       </Stage>
+
+      {/* Absolute HTML Context Floating Toolbar above selected element */}
+      {pos && selectedNode && (
+        <div
+          style={{
+            position: "absolute",
+            left: `${pos.x}px`,
+            top: `${pos.y - 14}px`,
+            transform: "translate(-50%, -100%)",
+          }}
+          className="z-30 flex items-center gap-1 bg-[#13151D]/90 backdrop-blur-md border border-white/10 px-2 py-1.5 rounded-xl shadow-2xl text-xs font-semibold text-zinc-300 select-none animate-in fade-in zoom-in-95 duration-150"
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
+          {/* Open Link if node has a URL annotation */}
+          {selectedNode.type === "text" && (selectedNode as any).linkedUrl && (
+            <>
+              <button
+                type="button"
+                onClick={() => window.open((selectedNode as any).linkedUrl, "_blank")}
+                title="Follow Annotation Link"
+                className="h-8 px-2 flex items-center gap-1.5 rounded-lg bg-indigo-650/40 hover:bg-indigo-600/50 text-indigo-400 hover:text-indigo-300 font-bold transition-colors cursor-pointer border border-indigo-500/20"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span>Go to Link</span>
+              </button>
+              <div className="w-[1px] h-4 bg-white/10 mx-0.5" />
+            </>
+          )}
+
+          {/* Lock / Unlock */}
+          <button
+            type="button"
+            onClick={() => toggleNodeLock(selectedNode.id)}
+            title={isSelectedNodeLocked ? "Unlock Element" : "Lock Element"}
+            className={cn(
+              "h-8 w-8 flex items-center justify-center rounded-lg transition-colors cursor-pointer",
+              isSelectedNodeLocked
+                ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
+                : "hover:bg-white/10 text-zinc-400 hover:text-zinc-200"
+            )}
+          >
+            {isSelectedNodeLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+          </button>
+
+          <div className="w-[1px] h-4 bg-white/10 mx-0.5" />
+
+          {/* Front / Back */}
+          <button
+            type="button"
+            onClick={() => bringToFront(selectedNode.id)}
+            disabled={isSelectedNodeLocked}
+            title="Bring to Front"
+            className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
+          >
+            <ArrowUp className="h-4 w-4" />
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => sendToBack(selectedNode.id)}
+            disabled={isSelectedNodeLocked}
+            title="Send to Back"
+            className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
+          >
+            <ArrowDown className="h-4 w-4" />
+          </button>
+
+          <div className="w-[1px] h-4 bg-white/10 mx-0.5" />
+
+          {/* Copy / Paste Style */}
+          <button
+            type="button"
+            onClick={() => copyStyle(selectedNode.id)}
+            title="Copy Style"
+            className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => pasteStyle(selectedNode.id)}
+            disabled={!styleClipboard || isSelectedNodeLocked}
+            title="Paste Style"
+            className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
+          >
+            <Clipboard className="h-4 w-4" />
+          </button>
+
+          <div className="w-[1px] h-4 bg-white/10 mx-0.5" />
+
+          {/* Duplicate */}
+          <button
+            type="button"
+            onClick={() => duplicateNode(selectedNode.id)}
+            disabled={isSelectedNodeLocked}
+            title="Duplicate"
+            className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
+          >
+            <CopyPlus className="h-4 w-4" />
+          </button>
+
+          {/* Delete */}
+          <button
+            type="button"
+            onClick={() => deleteNode(selectedNode.id)}
+            disabled={isSelectedNodeLocked}
+            title="Delete"
+            className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

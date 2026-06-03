@@ -218,6 +218,7 @@ export function ReadOnlyBoard({ mapId, canvasData, interactive = true, fit = "co
               onSelect={() => {}} // No selection in ReadOnly mode
               draggable={false} // Disable dragging
               onDragEnd={() => {}}
+              readOnly={true}
             />
           ))}
         </Layer>

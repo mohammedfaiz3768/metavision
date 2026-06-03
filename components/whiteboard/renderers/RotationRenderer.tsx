@@ -15,6 +15,7 @@ interface RendererProps {
   onSelect: () => void;
   draggable: boolean;
   onDragEnd: (x: number, y: number) => void;
+  listening?: boolean;
 }
 
 export function RotationRenderer({
@@ -25,9 +26,10 @@ export function RotationRenderer({
   onSelect,
   draggable,
   onDragEnd,
+  listening = true,
 }: RendererProps) {
   const dashedLineRef = useRef<any>(null);
-  const { viewport } = useCanvasStore();
+  const { viewport, isReplaying, replayProgress } = useCanvasStore();
   const scale = viewport.scaleX || 1;
 
   useEffect(() => {
@@ -85,11 +87,14 @@ export function RotationRenderer({
       x={screenPos.x}
       y={screenPos.y}
       draggable={draggable}
+      listening={listening}
       onClick={(e) => {
+        if (listening === false) return;
         e.cancelBubble = true;
         onSelect();
       }}
       onTap={(e) => {
+        if (listening === false) return;
         e.cancelBubble = true;
         onSelect();
       }}
@@ -162,6 +167,56 @@ export function RotationRenderer({
         stroke={color}
         strokeWidth={1.5 / scale}
       />
+
+      {/* 7. Replay Mode Sliding Teammate Dot Indicator */}
+      {isReplaying && (() => {
+        const getAnimatedPoint = (pts: number[], progress: number) => {
+          const totalPoints = pts.length / 2;
+          const totalSegments = totalPoints - 1;
+          if (totalSegments <= 0) return { x: pts[0], y: pts[1] };
+          
+          const segmentIndex = Math.min(Math.floor(progress * totalSegments), totalSegments - 1);
+          const segmentProgress = (progress * totalSegments) - segmentIndex;
+          
+          const ax = pts[segmentIndex * 2];
+          const ay = pts[segmentIndex * 2 + 1];
+          const bx = pts[(segmentIndex + 1) * 2];
+          const by = pts[(segmentIndex + 1) * 2 + 1];
+          
+          return {
+            x: ax + (bx - ax) * segmentProgress,
+            y: ay + (by - ay) * segmentProgress,
+          };
+        };
+
+        const animPt = getAnimatedPoint(node.points, replayProgress);
+        const animX = animPt.x * stageWidth;
+        const animY = animPt.y * stageHeight;
+
+        return (
+          <Group>
+            {/* Outer pulsing ring */}
+            <KonvaCircle
+              x={animX}
+              y={animY}
+              radius={9 / scale}
+              fill={color}
+              opacity={0.3}
+              stroke="#ffffff"
+              strokeWidth={1 / scale}
+            />
+            {/* Inner solid tracking dot */}
+            <KonvaCircle
+              x={animX}
+              y={animY}
+              radius={5.5 / scale}
+              fill="#ffffff"
+              stroke={color}
+              strokeWidth={2 / scale}
+            />
+          </Group>
+        );
+      })()}
     </Group>
   );
 }

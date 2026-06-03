@@ -88,7 +88,7 @@ export function PopoverContent({
   children: React.ReactNode;
   className?: string;
   align?: "start" | "center" | "end";
-  side?: "top" | "bottom";
+  side?: "top" | "bottom" | "right";
 }) {
   const context = React.useContext(PopoverContext);
   if (!context) throw new Error("PopoverContent must be used inside Popover");
@@ -100,18 +100,23 @@ export function PopoverContent({
       data-popover-content="true"
       className={cn(
         "absolute z-50 w-72 rounded-lg border border-border bg-card p-4 text-foreground shadow-md outline-none animate-in fade-in-0 zoom-in-95 duration-100",
-        side === "top" ? "bottom-full mb-2" : "top-full mt-2",
-        side === "top"
-          ? align === "end"
+        side === "top" && "bottom-full mb-2",
+        side === "bottom" && "top-full mt-2",
+        side === "right" && "left-full top-0 ml-2 origin-left",
+        side === "top" && (
+          align === "end"
             ? "right-0 origin-bottom-right"
             : align === "start"
             ? "left-0 origin-bottom-left"
             : "left-1/2 -translate-x-1/2 origin-bottom"
-          : align === "end"
-          ? "right-0 origin-top-right"
-          : align === "start"
-          ? "left-0 origin-top-left"
-          : "left-1/2 -translate-x-1/2 origin-top",
+        ),
+        side === "bottom" && (
+          align === "end"
+            ? "right-0 origin-top-right"
+            : align === "start"
+            ? "left-0 origin-top-left"
+            : "left-1/2 -translate-x-1/2 origin-top"
+        ),
         className
       )}
       onClick={(e) => e.stopPropagation()}

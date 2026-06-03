@@ -1,4 +1,5 @@
 import React from "react";
+import { Group } from "react-konva";
 import { FreedrawRenderer } from "./FreedrawRenderer";
 import { RotationRenderer } from "./RotationRenderer";
 import { ArrowRenderer } from "./ArrowRenderer";
@@ -18,6 +19,8 @@ interface NodeRendererProps {
   onDragEnd: (x: number, y: number) => void;
   onTextDblClick?: (node: CanvasNode, event: any) => void;
   editingTextNodeId?: string | null;
+  readOnly?: boolean;
+  listening?: boolean;
 }
 
 function NodeRendererComponent({
@@ -30,6 +33,8 @@ function NodeRendererComponent({
   onDragEnd,
   onTextDblClick,
   editingTextNodeId,
+  readOnly = false,
+  listening = true,
 }: NodeRendererProps) {
   const commonProps = {
     node,
@@ -39,40 +44,55 @@ function NodeRendererComponent({
     onSelect,
     draggable,
     onDragEnd,
+    listening,
   };
+
+  let renderedElement = null;
 
   switch (node.type as string) {
     case "freedraw":
-      return <FreedrawRenderer {...commonProps} />;
+      renderedElement = <FreedrawRenderer {...commonProps} />;
+      break;
 
     case "rotation":
-      return <RotationRenderer {...commonProps} />;
+      renderedElement = <RotationRenderer {...commonProps} />;
+      break;
 
     case "arrow":
-      return <ArrowRenderer {...commonProps} />;
+      renderedElement = <ArrowRenderer {...commonProps} />;
+      break;
 
     case "circle":
     case "rect":
-      return <ShapeRenderer {...commonProps} />;
+      renderedElement = <ShapeRenderer {...commonProps} />;
+      break;
 
     case "text":
-      return (
+      renderedElement = (
         <TextRenderer
           {...commonProps}
+          readOnly={readOnly}
           isEditing={editingTextNodeId === node.id}
           onDblClick={(e) => onTextDblClick?.(node, e)}
         />
       );
+      break;
 
     case "marker":
-      return <MarkerRenderer {...commonProps} />;
+      renderedElement = <MarkerRenderer {...commonProps} />;
+      break;
 
     case "logo-marker":
-      return <LogoMarkerRenderer {...commonProps} />;
+      renderedElement = <LogoMarkerRenderer {...commonProps} />;
+      break;
 
     default:
-      return null;
+      renderedElement = null;
   }
+
+  if (!renderedElement) return null;
+
+  return <Group listening={listening}>{renderedElement}</Group>;
 }
 
 // Perform custom shallow comparison to optimize rerenders
@@ -81,7 +101,9 @@ export const NodeRenderer = React.memo(NodeRendererComponent, (prevProps, nextPr
     prevProps.node === nextProps.node &&
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.draggable === nextProps.draggable &&
-    prevProps.editingTextNodeId === nextProps.editingTextNodeId
+    prevProps.editingTextNodeId === nextProps.editingTextNodeId &&
+    prevProps.readOnly === nextProps.readOnly &&
+    prevProps.listening === nextProps.listening
   );
 });
 

@@ -171,17 +171,17 @@ export default function OwnerDashboardPage() {
                   <TableCell className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-7 w-7 border border-slate-200">
-                        {staff.profiles.avatar_url ? (
+                        {staff.profiles?.avatar_url ? (
                           <AvatarImage src={staff.profiles.avatar_url} />
                         ) : null}
                         <AvatarFallback className="bg-slate-100 text-slate-700 text-xs font-bold uppercase">
-                          {staff.profiles.username.substring(0, 2)}
+                          {staff.profiles?.username ? staff.profiles.username.substring(0, 2) : '??'}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="font-semibold text-xs text-slate-900">{staff.profiles.username}</span>
+                      <span className="font-semibold text-xs text-slate-900">{staff.profiles?.username || 'Unknown'}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="px-4 py-4 text-xs font-mono text-slate-555 text-slate-500">{staff.profiles.username}</TableCell>
+                  <TableCell className="px-4 py-4 text-xs font-mono text-slate-555 text-slate-500">{staff.profiles?.username || 'Unknown'}</TableCell>
                   <TableCell className="px-4 py-4">
                     <Badge
                       className={

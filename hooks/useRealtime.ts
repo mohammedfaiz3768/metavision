@@ -31,6 +31,7 @@ const CanvasNodeSchema = z.object({
   markerType: z.string().optional(),
   pointerLength: z.number().optional(),
   pointerWidth: z.number().optional(),
+  isLocked: z.boolean().optional(),
   createdBy: z.string(),
   updatedBy: z.string(),
   updatedAt: z.number(),

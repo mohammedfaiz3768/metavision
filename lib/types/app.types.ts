@@ -229,9 +229,9 @@ export interface TeamInvite {
 
 // ---- Whiteboard ----
 
-export type LayerType = 'rotations' | 'enemy_routes' | 'zones' | 'utility' | 'notes' | 'custom';
+export type LayerType = 'map' | 'team_rotations' | 'enemy_rotations' | 'zones' | 'utility' | 'notes' | 'markers' | 'coach_notes' | (string & {});
 
-export type ToolType = 'select' | 'freedraw' | 'rotation' | 'arrow' | 'circle' | 'rect' | 'text' | 'marker' | 'pan';
+export type ToolType = 'select' | 'freedraw' | 'rotation' | 'arrow' | 'circle' | 'rect' | 'text' | 'marker' | 'pan' | 'eraser';
 
 export type CanvasNodeType = 'freedraw' | 'rotation' | 'arrow' | 'circle' | 'rect' | 'text' | 'marker';
 
@@ -262,6 +262,8 @@ export interface CanvasNode {
   width?: number;
   height?: number;
   radius?: number;
+  radiusX?: number;
+  radiusY?: number;
   rotation?: number; // degrees, NOT normalized
 
   // Style — raw values
@@ -269,6 +271,9 @@ export interface CanvasNode {
   strokeWidth: number; // px 1-8
   opacity?: number; // 0-1
   fontSize?: number; // px
+  isFilled?: boolean;
+  fillOpacity?: number;
+  isCircular?: boolean;
 
   // Type-specific
   text?: string;
@@ -277,6 +282,7 @@ export interface CanvasNode {
   pointerWidth?: number; // px
 
   // Metadata
+  isLocked?: boolean;
   createdBy: string;
   updatedBy: string;
   updatedAt: number; // Date.now() — for UI/debug only, NOT conflict resolution

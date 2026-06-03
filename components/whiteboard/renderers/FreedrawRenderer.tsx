@@ -12,6 +12,7 @@ interface RendererProps {
   onSelect: () => void;
   draggable: boolean;
   onDragEnd: (x: number, y: number) => void;
+  listening?: boolean;
 }
 
 export function FreedrawRenderer({
@@ -22,6 +23,7 @@ export function FreedrawRenderer({
   onSelect,
   draggable,
   onDragEnd,
+  listening = true,
 }: RendererProps) {
   if (!node.points) return null;
 
@@ -42,11 +44,14 @@ export function FreedrawRenderer({
       lineCap="round"
       lineJoin="round"
       draggable={draggable}
+      listening={listening}
       onClick={(e) => {
+        if (listening === false) return;
         e.cancelBubble = true;
         onSelect();
       }}
       onTap={(e) => {
+        if (listening === false) return;
         e.cancelBubble = true;
         onSelect();
       }}

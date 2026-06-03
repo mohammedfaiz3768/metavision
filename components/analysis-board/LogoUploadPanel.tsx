@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -113,24 +112,19 @@ export function LogoUploadPanel({ tournamentId, onAddMarkerToCanvas }: LogoUploa
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center p-8 gap-2">
-        <Loader2 className="h-6 w-6 text-amber-500 animate-spin" />
+        <Loader2 className="h-6 w-6 text-indigo-500 animate-spin" />
         <span className="text-xs text-slate-500 font-mono">Loading logo slots...</span>
       </div>
     );
   }
 
   return (
-    <Card className="border-slate-200 bg-white text-slate-800 w-full select-none shadow-sm">
-      <CardHeader className="pb-3 border-b border-slate-200 bg-[#F9FAFB]">
-        <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 font-mono">
-          <Swords className="h-4.5 w-4.5 text-[#6366F1]" />
-          Roster Marker Panel (12 Slots)
-        </CardTitle>
-        <CardDescription className="text-[10px] text-slate-450 leading-relaxed font-mono">
-          Upload 12 squad logos. Drag or click a logo slot to place circular clipped markers on the strategy whiteboard.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pt-4 space-y-4 max-h-[calc(100vh-220px)] overflow-y-auto pr-1">
+    <div className="w-full select-none space-y-3">
+      <p className="text-[10px] text-slate-500 leading-relaxed font-mono">
+        Upload squad logos. Click a logo slot to place circular clipped markers on the strategy whiteboard.
+      </p>
+
+      <div className="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto pr-0.5 scrollbar-thin">
         {Array.from({ length: 12 }, (_, idx) => {
           const slotNum = idx + 1;
           const slot = slotMap[slotNum];
@@ -138,10 +132,10 @@ export function LogoUploadPanel({ tournamentId, onAddMarkerToCanvas }: LogoUploa
 
           if (isEditing) {
             return (
-              <div key={slotNum} className="p-3 rounded-lg border border-slate-200 bg-slate-50/50 space-y-3 shadow-sm">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
-                  <span className="text-[10px] font-mono text-[#6366F1] font-bold uppercase">Setup Team Slot #{slotNum}</span>
-                  <Button variant="ghost" size="icon-sm" className="h-5 w-5 text-xs text-slate-400 hover:text-slate-900" onClick={() => setActiveSlot(null)}>
+              <div key={slotNum} className="p-3 rounded-xl border border-slate-800/60 bg-[#1C1E26] space-y-3 shadow-sm">
+                <div className="flex items-center justify-between border-b border-slate-800/60 pb-1.5">
+                  <span className="text-[10px] font-mono text-indigo-400 font-bold uppercase">Setup Team Slot #{slotNum}</span>
+                  <Button variant="ghost" size="icon" className="h-5 w-5 text-xs text-slate-500 hover:text-slate-100" onClick={() => setActiveSlot(null)}>
                     ✕
                   </Button>
                 </div>
@@ -152,7 +146,7 @@ export function LogoUploadPanel({ tournamentId, onAddMarkerToCanvas }: LogoUploa
                     placeholder="e.g. Total Gaming"
                     value={teamName}
                     onChange={(e) => setTeamName(e.target.value)}
-                    className="bg-white border-slate-200 text-[11px] h-8 text-slate-900 focus-visible:ring-[#6366F1]"
+                    className="bg-[#0B0C10] border-slate-800 text-[11px] h-8 text-slate-100 focus-visible:ring-indigo-500"
                   />
                 </div>
 
@@ -168,25 +162,25 @@ export function LogoUploadPanel({ tournamentId, onAddMarkerToCanvas }: LogoUploa
                     />
                     <label
                       htmlFor={`file-slot-${slotNum}`}
-                      className="flex-1 flex items-center justify-center gap-2 border border-slate-200 border-dashed rounded-md bg-white p-2 text-slate-500 hover:text-slate-800 hover:border-slate-350 cursor-pointer text-[10px] h-10 transition-colors shadow-sm"
+                      className="flex-1 flex items-center justify-center gap-2 border border-slate-800 border-dashed rounded-lg bg-[#0B0C10] p-2 text-slate-500 hover:text-slate-300 hover:border-slate-700 cursor-pointer text-[10px] h-10 transition-colors shadow-sm"
                     >
                       <Upload className="h-3.5 w-3.5" />
                       {logoBase64 ? "Image Loaded" : "Choose Image"}
                     </label>
                     {logoBase64 && (
-                      <Avatar className="h-10 w-10 border border-slate-200">
+                      <Avatar className="h-10 w-10 border border-slate-800">
                         <AvatarImage src={logoBase64} />
-                        <AvatarFallback className="text-[10px]">T</AvatarFallback>
+                        <AvatarFallback className="text-[10px] bg-slate-900 text-slate-400">T</AvatarFallback>
                       </Avatar>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-200/40">
-                  <Button size="xs" variant="ghost" className="text-[10px] text-slate-500 hover:text-slate-900 border border-slate-200/40" onClick={() => setActiveSlot(null)}>
+                <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-800/40">
+                  <Button size="sm" variant="ghost" className="text-[10px] text-slate-500 hover:text-slate-100 border border-slate-800/40 h-7 px-2.5" onClick={() => setActiveSlot(null)}>
                     Cancel
                   </Button>
-                  <Button size="xs" className="bg-[#6366F1] hover:bg-[#4F46E5] text-white font-bold shadow-sm" onClick={() => handleSaveSlot(slotNum)}>
+                  <Button size="sm" className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-sm text-[10px] h-7 px-2.5" onClick={() => handleSaveSlot(slotNum)}>
                     Save Slot
                   </Button>
                 </div>
@@ -197,46 +191,46 @@ export function LogoUploadPanel({ tournamentId, onAddMarkerToCanvas }: LogoUploa
           return (
             <div
               key={slotNum}
-              className="flex items-center justify-between p-2 rounded-lg border border-slate-200 bg-slate-50/40 hover:bg-slate-50/80 transition-all shadow-sm"
+              className="flex items-center justify-between p-2 rounded-xl border border-slate-800/40 bg-[#1C1E26]/40 hover:bg-[#1C1E26] transition-all shadow-sm"
             >
               {slot ? (
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8 border border-slate-200 shadow-sm">
+                  <Avatar className="h-8 w-8 border border-slate-800 shadow-sm">
                     <AvatarImage src={slot.logo_url} />
-                    <AvatarFallback className="bg-slate-100 text-slate-500 text-[10px] font-bold">
+                    <AvatarFallback className="bg-slate-900 text-slate-400 text-[10px] font-bold">
                       {slot.team_name.substring(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-slate-900 leading-none">{slot.team_name}</p>
-                    <span className="text-[9px] font-mono text-slate-400 uppercase leading-none">Slot #{slotNum}</span>
+                    <p className="text-xs font-bold text-slate-200 leading-none">{slot.team_name}</p>
+                    <span className="text-[9px] font-mono text-slate-500 uppercase leading-none">Slot #{slotNum}</span>
                   </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full border border-slate-200 border-dashed bg-white flex items-center justify-center text-slate-400">
+                  <div className="h-8 w-8 rounded-full border border-slate-800 border-dashed bg-[#0B0C10] flex items-center justify-center text-slate-600">
                     <Plus className="h-4 w-4" />
                   </div>
                   <div className="space-y-0.5">
-                    <p className="text-xs text-slate-400 italic leading-none">Empty Slot</p>
-                    <span className="text-[9px] font-mono text-slate-400 uppercase leading-none">Slot #{slotNum}</span>
+                    <p className="text-xs text-slate-500 italic leading-none">Empty Slot</p>
+                    <span className="text-[9px] font-mono text-slate-600 uppercase leading-none">Slot #{slotNum}</span>
                   </div>
                 </div>
               )}
 
               {slot ? (
                 <Button
-                  size="xs"
-                  className="bg-[#6366F1] hover:bg-[#4F46E5] text-white text-[9px] font-bold h-7 gap-1 shadow-sm"
+                  size="sm"
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-bold h-7 gap-1 shadow-sm px-2.5"
                   onClick={() => onAddMarkerToCanvas(slot.team_name, slot.logo_url)}
                 >
                   Place Marker
                 </Button>
               ) : (
                 <Button
-                  size="xs"
+                  size="sm"
                   variant="ghost"
-                  className="text-[9px] h-7 hover:bg-[#6366F1]/5 text-slate-500 hover:text-[#6366F1] border border-slate-200/40"
+                  className="text-[9px] h-7 hover:bg-indigo-600/10 text-slate-500 hover:text-indigo-400 border border-slate-800/40 px-2.5"
                   onClick={() => {
                     setActiveSlot(slotNum);
                     setTeamName("");
@@ -249,7 +243,7 @@ export function LogoUploadPanel({ tournamentId, onAddMarkerToCanvas }: LogoUploa
             </div>
           );
         })}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

@@ -22,6 +22,7 @@ export const BaseNodeSchema = z.object({
   color: z.string().max(30),
   strokeWidth: z.number().min(1).max(20),
   opacity: z.number().min(0).max(1).optional(),
+  isLocked: z.boolean().optional(),
   createdBy: z.string(),
   updatedBy: z.string(),
   updatedAt: z.number().int().nonnegative(),
