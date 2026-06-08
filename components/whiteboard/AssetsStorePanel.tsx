@@ -218,9 +218,10 @@ const TACTICS = [
 interface AssetsStorePanelProps {
   onAddAsset: (asset: { name: string; url: string; isCircular: boolean }) => void;
   allowUpload?: boolean;
+  activeAssetUrl?: string | null;
 }
 
-export function AssetsStorePanel({ onAddAsset, allowUpload = false }: AssetsStorePanelProps) {
+export function AssetsStorePanel({ onAddAsset, allowUpload = false, activeAssetUrl = null }: AssetsStorePanelProps) {
   const [activeCategory, setActiveCategory] = useState<"all" | "logos" | "weapons" | "tactics" | "uploads">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [customUploads, setCustomUploads] = useState<{ id: string; name: string; url: string; isCircular: boolean }[]>([]);
@@ -452,7 +453,11 @@ export function AssetsStorePanel({ onAddAsset, allowUpload = false }: AssetsStor
               <div
                 key={asset.id}
                 onClick={() => onAddAsset({ name: asset.name, url: asset.url, isCircular: asset.isCircular })}
-                className="group relative flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800/40 bg-[#1C1E26]/30 hover:bg-[#1C1E26]/90 hover:border-indigo-500/50 hover:shadow-[0_0_12px_rgba(99,102,241,0.12)] cursor-pointer select-none transition-all duration-200"
+                className={`group relative flex flex-col items-center justify-center p-2 rounded-xl border cursor-pointer select-none transition-all duration-200 ${
+                  activeAssetUrl === asset.url
+                    ? "bg-indigo-600/15 border-indigo-500/60 shadow-[0_0_16px_rgba(99,102,241,0.2)] ring-1 ring-indigo-500/40"
+                    : "border-slate-800/40 bg-[#1C1E26]/30 hover:bg-[#1C1E26]/90 hover:border-indigo-500/50 hover:shadow-[0_0_12px_rgba(99,102,241,0.12)]"
+                }`}
               >
                 {/* SVG/Image Preview Box */}
                 <div className="w-16 h-16 flex items-center justify-center rounded-lg overflow-hidden bg-slate-950/20 group-hover:scale-105 transition-transform duration-200 relative">

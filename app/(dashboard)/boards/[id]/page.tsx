@@ -109,6 +109,8 @@ export default function BoardPage({ params }: PageProps) {
     redo,
     canUndo,
     canRedo,
+    pendingLogo,
+    setPendingLogo,
   } = useCanvasStore();
 
   const [copied, setCopied] = useState(false);
@@ -214,11 +216,17 @@ export default function BoardPage({ params }: PageProps) {
       } else if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
         deleteSelectedNodes();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        if (useCanvasStore.getState().activeTool === "logo-place") {
+          setPendingLogo(null);
+        }
+        setTool("select");
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [setTool, deleteSelectedNodes]);
+  }, [setTool, deleteSelectedNodes, setPendingLogo]);
 
   // ---- 1. Fetch Strategy Board Details ----
   const { data: board, isLoading: boardLoading, error: boardError, refetch: refetchBoard } = useQuery<StrategyBoard>({
@@ -914,27 +922,11 @@ export default function BoardPage({ params }: PageProps) {
                 </div>
                 <AssetsStorePanel
                   allowUpload={currentTeam?.owner_id === user?.id}
+                  activeAssetUrl={pendingLogo?.url ?? null}
                   onAddAsset={({ name, url, isCircular }) => {
-                    const nodeId = `logo-marker-${Date.now()}`;
-                    const newNode: CanvasNode = {
-                      id: nodeId,
-                      type: "logo-marker" as any,
-                      layer: activeLayer,
-                      x: 0.5,
-                      y: 0.5,
-                      radius: 0.035,
-                      markerType: url,
-                      text: name,
-                      color: "#ffffff",
-                      strokeWidth: 1,
-                      isCircular,
-                      createdBy: user?.id || "",
-                      updatedBy: user?.id || "",
-                      updatedAt: Date.now(),
-                      version: 1,
-                    };
-                    useCanvasStore.getState().addNode(newNode);
-                    toast.success(`Placed "${name}" on canvas!`);
+                    setPendingLogo({ name, url, isCircular });
+                    setTool("logo-place");
+                    toast.info(`Select a location on the map to place "${name}"`);
                   }}
                 />
               </div>

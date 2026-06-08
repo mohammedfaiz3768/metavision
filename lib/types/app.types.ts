@@ -231,9 +231,9 @@ export interface TeamInvite {
 
 export type LayerType = 'map' | 'team_rotations' | 'enemy_rotations' | 'zones' | 'utility' | 'notes' | 'markers' | 'coach_notes' | (string & {});
 
-export type ToolType = 'select' | 'freedraw' | 'rotation' | 'arrow' | 'circle' | 'rect' | 'text' | 'marker' | 'pan' | 'eraser';
+export type ToolType = 'select' | 'freedraw' | 'rotation' | 'arrow' | 'circle' | 'rect' | 'text' | 'marker' | 'logo-place' | 'pan' | 'eraser';
 
-export type CanvasNodeType = 'freedraw' | 'rotation' | 'arrow' | 'circle' | 'rect' | 'text' | 'marker';
+export type CanvasNodeType = 'freedraw' | 'rotation' | 'arrow' | 'circle' | 'rect' | 'text' | 'marker' | 'logo-marker';
 
 export interface CanvasNode {
   id: string;

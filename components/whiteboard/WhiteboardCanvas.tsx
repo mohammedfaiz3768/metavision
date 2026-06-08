@@ -14,6 +14,7 @@ import { useArrowTool } from "./tools/useArrowTool";
 import { useShapeTool } from "./tools/useShapeTool";
 import { useTextTool } from "./tools/useTextTool";
 import { useMarkerTool } from "./tools/useMarkerTool";
+import { useLogoPlaceTool } from "./tools/useLogoPlaceTool";
 import { useSelectTool } from "./tools/useSelectTool";
 import { NodeRenderer } from "./renderers/NodeRenderer";
 import { CursorOverlay } from "./CursorOverlay";
@@ -68,6 +69,9 @@ export function WhiteboardCanvas({
     sendToBack,
     duplicateNode,
     toggleNodeLock,
+    pendingLogo,
+    setPendingLogo,
+    setTool,
   } = useCanvasStore();
 
   // Load Map config and Preload image
@@ -254,6 +258,7 @@ export function WhiteboardCanvas({
   const shapeTool = useShapeTool({ stageRef: activeStageRef, userId });
   const textTool = useTextTool({ stageRef: activeStageRef, userId });
   const markerTool = useMarkerTool({ stageRef: activeStageRef, userId });
+  const logoPlaceTool = useLogoPlaceTool({ stageRef: activeStageRef, userId });
 
   // Panning & Zoom Viewport
   const { handleWheel, handleDragEnd } = useViewport({
@@ -371,6 +376,11 @@ export function WhiteboardCanvas({
         return {
           onClick: markerTool.handleStageClick,
           onTap: markerTool.handleStageClick,
+        };
+      case "logo-place":
+        return {
+          onClick: logoPlaceTool.handleStageClick,
+          onTap: logoPlaceTool.handleStageClick,
         };
       case "select":
       default:
@@ -562,7 +572,7 @@ export function WhiteboardCanvas({
         onTap={(e) => handleStageEvent(e, "onTap")}
         className={cn(
           "shadow-2xl border border-border overflow-hidden bg-secondary/10",
-          (spacePressed || activeTool === "pan") ? "cursor-grab active:cursor-grabbing" : activeTool === "eraser" ? "cursor-crosshair" : "cursor-default"
+          (spacePressed || activeTool === "pan") ? "cursor-grab active:cursor-grabbing" : activeTool === "eraser" ? "cursor-crosshair" : activeTool === "logo-place" ? "cursor-crosshair" : "cursor-default"
         )}
       >
         {/* Layer 1: Map Image and grid lines */}
@@ -964,6 +974,29 @@ export function WhiteboardCanvas({
             className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
           >
             <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Floating Logo Placement Banner */}
+      {activeTool === "logo-place" && pendingLogo && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-slate-900/95 backdrop-blur-md border border-slate-800 px-4 py-2 rounded-full shadow-2xl flex items-center gap-3 text-xs font-semibold select-none text-white animate-in fade-in slide-in-from-top-4 duration-200">
+          <span className="text-[#6366F1] font-bold animate-pulse flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#6366F1] animate-ping" />
+            Placing: {pendingLogo.name}
+          </span>
+          <div className="h-3 w-[1px] bg-slate-800" />
+          <span className="text-slate-400 text-[10px]">Click map to place or press Esc to cancel</span>
+          <button
+            type="button"
+            onClick={(evt) => {
+              evt.stopPropagation();
+              setPendingLogo(null);
+              setTool("select");
+            }}
+            className="h-6 px-3 text-[10px] font-extrabold border border-slate-700 text-slate-400 hover:bg-slate-800 rounded-full transition cursor-pointer"
+          >
+            Cancel
           </button>
         </div>
       )}

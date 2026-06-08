@@ -36,6 +36,7 @@ interface CanvasState {
   strokeWidth: number;
   activeLayer: LayerType;
   activeMarkerType: string | null;
+  pendingLogo: { name: string; url: string; isCircular: boolean } | null;
   snapToGrid: boolean;
 
   // Viewport
@@ -93,6 +94,7 @@ interface CanvasState {
   setStrokeWidth: (width: number) => void;
   setActiveLayer: (layer: LayerType) => void;
   setActiveMarker: (markerId: string | null) => void;
+  setPendingLogo: (logo: { name: string; url: string; isCircular: boolean } | null) => void;
   toggleSnapToGrid: () => void;
 
   // Viewport
@@ -155,6 +157,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   strokeWidth: 3,
   activeLayer: "team_rotations",
   activeMarkerType: null,
+  pendingLogo: null,
   snapToGrid: false,
 
   viewport: { x: 0, y: 0, scaleX: 1, scaleY: 1 },
@@ -321,6 +324,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   setStrokeWidth: (width) => set({ strokeWidth: width }),
   setActiveLayer: (layer) => set({ activeLayer: layer }),
   setActiveMarker: (markerId) => set({ activeMarkerType: markerId }),
+  setPendingLogo: (logo) => set({ pendingLogo: logo }),
   toggleSnapToGrid: () => set((state) => ({ snapToGrid: !state.snapToGrid })),
 
   // ---- Viewport ----

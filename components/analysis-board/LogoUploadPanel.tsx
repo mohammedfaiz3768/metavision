@@ -18,10 +18,11 @@ interface LogoUpload {
 
 interface LogoUploadPanelProps {
   tournamentId: string;
-  onAddMarkerToCanvas: (teamName: string, logoUrl: string) => void;
+  onSelectLogo?: (logo: { name: string; url: string; isCircular: boolean } | null) => void;
+  activeLogoUrl?: string | null;
 }
 
-export function LogoUploadPanel({ tournamentId, onAddMarkerToCanvas }: LogoUploadPanelProps) {
+export function LogoUploadPanel({ tournamentId, onSelectLogo, activeLogoUrl }: LogoUploadPanelProps) {
   const queryClient = useQueryClient();
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
   const [teamName, setTeamName] = useState("");
@@ -191,7 +192,20 @@ export function LogoUploadPanel({ tournamentId, onAddMarkerToCanvas }: LogoUploa
           return (
             <div
               key={slotNum}
-              className="flex items-center justify-between p-2 rounded-xl border border-slate-800/40 bg-[#1C1E26]/40 hover:bg-[#1C1E26] transition-all shadow-sm"
+              onClick={() => {
+                if (slot) {
+                  onSelectLogo?.({ name: slot.team_name, url: slot.logo_url, isCircular: true });
+                } else {
+                  setActiveSlot(slotNum);
+                  setTeamName("");
+                  setLogoBase64("");
+                }
+              }}
+              className={`flex items-center justify-between p-2 rounded-xl border cursor-pointer transition-all shadow-sm ${
+                slot && activeLogoUrl === slot.logo_url
+                  ? "bg-indigo-600/15 border-indigo-500/60 shadow-[0_0_16px_rgba(99,102,241,0.2)] ring-1 ring-indigo-500/40"
+                  : "border-slate-800/40 bg-[#1C1E26]/40 hover:bg-[#1C1E26] hover:border-indigo-500/50"
+              }`}
             >
               {slot ? (
                 <div className="flex items-center gap-3">
@@ -219,19 +233,28 @@ export function LogoUploadPanel({ tournamentId, onAddMarkerToCanvas }: LogoUploa
               )}
 
               {slot ? (
-                <Button
-                  size="sm"
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-bold h-7 gap-1 shadow-sm px-2.5"
-                  onClick={() => onAddMarkerToCanvas(slot.team_name, slot.logo_url)}
-                >
-                  Place Marker
-                </Button>
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  {activeLogoUrl === slot.logo_url ? (
+                    <span className="text-[9px] font-extrabold text-indigo-400 bg-indigo-500/10 border border-indigo-500/40 px-2.5 py-1 rounded-full uppercase tracking-wider animate-pulse">
+                      Selected
+                    </span>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-bold h-7 gap-1 shadow-sm px-2.5"
+                      onClick={() => onSelectLogo?.({ name: slot.team_name, url: slot.logo_url, isCircular: true })}
+                    >
+                      Select
+                    </Button>
+                  )}
+                </div>
               ) : (
                 <Button
                   size="sm"
                   variant="ghost"
                   className="text-[9px] h-7 hover:bg-indigo-600/10 text-slate-500 hover:text-indigo-400 border border-slate-800/40 px-2.5"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setActiveSlot(slotNum);
                     setTeamName("");
                     setLogoBase64("");

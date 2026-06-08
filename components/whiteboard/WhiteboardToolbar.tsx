@@ -71,26 +71,14 @@ export function WhiteboardToolbar({ onAddLogo }: WhiteboardToolbarProps) {
       const base64Url = event.target?.result as string;
       if (!base64Url) return;
 
-      const nodeId = "logo_" + Date.now();
-      
-      const newNode = {
-        id: nodeId,
-        type: "logo-marker" as any,
-        layer: activeLayer,
-        x: 0.5,
-        y: 0.5,
-        markerType: base64Url, // base64 representation of custom file
-        text: file.name.substring(0, 15),
-        color: "#ffffff",
-        strokeWidth: 2,
-        createdBy: "user",
-        updatedBy: "user",
-        updatedAt: Date.now(),
-        version: 1
-      };
-      
-      useCanvasStore.getState().addNode(newNode);
-      toast.success(`Image "${file.name}" uploaded successfully!`);
+      const store = useCanvasStore.getState();
+      store.setPendingLogo({
+        name: file.name.substring(0, 15),
+        url: base64Url,
+        isCircular: false, // uploaded custom images are rectangular by default
+      });
+      store.setTool("logo-place");
+      toast.info(`Image "${file.name}" loaded! Click on the map to place it.`);
     };
     reader.readAsDataURL(file);
 
@@ -380,12 +368,17 @@ export function WhiteboardToolbar({ onAddLogo }: WhiteboardToolbarProps) {
           setOpenMenu(null);
           document.getElementById("whiteboard-image-upload")?.click();
         }}
-        className="h-10 w-10 rounded-xl flex items-center justify-center transition-all cursor-pointer border group relative bg-[#1C1E26] hover:bg-[#252833] border-slate-800 hover:text-slate-100"
-        title="Upload Custom Image (Max 3MB)"
+        className={cn(
+          "h-10 w-10 rounded-xl flex items-center justify-center transition-all cursor-pointer border group relative",
+          activeTool === "logo-place"
+            ? "bg-emerald-600 border-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)] animate-pulse"
+            : "bg-[#1C1E26] hover:bg-[#252833] border-slate-800 hover:text-slate-100"
+        )}
+        title={activeTool === "logo-place" ? "Logo Placement Active — Click on map to place" : "Upload Custom Image (Max 3MB)"}
       >
-        <ImageIcon className="h-4.5 w-4.5 text-[#10B981]" />
+        <ImageIcon className={cn("h-4.5 w-4.5", activeTool === "logo-place" ? "text-white" : "text-[#10B981]")} />
         <span className="absolute left-[54px] z-50 scale-0 group-hover:scale-100 transition-all origin-left bg-slate-900 border border-slate-800 px-2 py-1 rounded text-[9px] uppercase tracking-wider font-bold text-white shadow-md font-mono pointer-events-none whitespace-nowrap">
-          Upload Image
+          {activeTool === "logo-place" ? "Placing Logo..." : "Upload Image"}
         </span>
       </button>
       <input

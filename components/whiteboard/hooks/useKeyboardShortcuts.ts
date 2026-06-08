@@ -37,6 +37,16 @@ export function useKeyboardShortcuts() {
         redo();
       }
 
+      // Escape: Cancel logo placement or reset tool
+      if (e.key === "Escape") {
+        const store = useCanvasStore.getState();
+        if (store.activeTool === "logo-place") {
+          e.preventDefault();
+          store.setPendingLogo(null);
+          store.setTool("select");
+        }
+      }
+
       // Delete or Backspace: Delete selected
       if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();

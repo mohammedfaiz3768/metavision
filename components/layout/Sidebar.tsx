@@ -19,6 +19,7 @@ import {
   Settings,
   LogOut,
   ShieldAlert,
+  MessageSquare,
 } from "lucide-react";
 
 const navItems = [
@@ -30,6 +31,7 @@ const navItems = [
   { href: "/scrims", label: "Scrims", icon: Swords },
   { href: "/tournaments", label: "Tournaments", icon: Trophy },
   { href: "/team", label: "Team", icon: Users },
+  { href: "/communication", label: "Callouts", icon: MessageSquare },
 ];
 
 export function Sidebar() {
