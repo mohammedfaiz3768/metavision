@@ -4,6 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 interface CheckboxProps {
+  id?: string;
   checked?: boolean;
   onCheckedChange?: (checked: boolean) => void;
   className?: string;

@@ -27,8 +27,14 @@ export function LogoMarkerRenderer({
   onDragEnd,
   listening = true,
 }: LogoMarkerRendererProps) {
+  const { viewport, fitScale } = useCanvasStore();
+  const scale = viewport.scaleX || 1;
+  const currentFitScale = fitScale || 0.65; // fallback default fit-to-canvas scale
+  const scaleFactor = Math.min(1, currentFitScale / scale);
+
   const screenPos = normalizedToScreen(node.x, node.y, stageWidth, stageHeight);
-  const radius = (node.radius ?? 0.035) * stageWidth; // Default radius about 35px
+  const baseRadius = (node.radius ?? 0.035) * stageWidth; // Default radius about 35px
+  const radius = baseRadius * scaleFactor;
 
   // Use team logo URL from node
   const logoUrl = node.markerType || "";
@@ -120,7 +126,7 @@ export function LogoMarkerRenderer({
       {/* Drop shadow under the pin */}
       <Circle
         x={0}
-        y={2}
+        y={2 * scaleFactor}
         radius={circleRadius * 0.35}
         fill="rgba(0,0,0,0.25)"
         scaleX={2.2}
@@ -137,20 +143,20 @@ export function LogoMarkerRenderer({
         closed={true}
         fill={pinColor}
         stroke={pinBorderColor}
-        strokeWidth={1.5}
+        strokeWidth={1.5 * scaleFactor}
       />
 
       {/* Pin circular body background container */}
       <Circle
         x={0}
         y={circleCenterY}
-        radius={circleRadius + 2}
+        radius={circleRadius + 2 * scaleFactor}
         fill="#ffffff"
         stroke={pinBorderColor}
-        strokeWidth={2}
+        strokeWidth={2 * scaleFactor}
         shadowColor={shadowColor}
-        shadowBlur={6}
-        shadowOffset={{ x: 0, y: 3 }}
+        shadowBlur={6 * scaleFactor}
+        shadowOffset={{ x: 0, y: 3 * scaleFactor }}
         shadowOpacity={0.4}
       />
 
@@ -175,7 +181,7 @@ export function LogoMarkerRenderer({
             radius={circleRadius}
             fill="#f8fafc"
             stroke="#e2e8f0"
-            strokeWidth={1}
+            strokeWidth={1 * scaleFactor}
           />
         )}
       </Group>
@@ -185,10 +191,10 @@ export function LogoMarkerRenderer({
         <Circle
           x={0}
           y={circleCenterY}
-          radius={circleRadius + 5}
+          radius={circleRadius + 5 * scaleFactor}
           stroke="hsl(210, 100%, 60%)"
-          strokeWidth={2}
-          dash={[4, 4]}
+          strokeWidth={2 * scaleFactor}
+          dash={[4 * scaleFactor, 4 * scaleFactor]}
         />
       )}
 
@@ -196,18 +202,18 @@ export function LogoMarkerRenderer({
       {node.text && (
         <Text
           text={node.text}
-          fontSize={10}
+          fontSize={10 * scaleFactor}
           fontStyle="bold"
           fontFamily="Inter, system-ui, sans-serif"
           fill="#ffffff"
           align="center"
-          x={-50}
-          y={6}
-          width={100}
+          x={-50 * scaleFactor}
+          y={6 * scaleFactor}
+          width={100 * scaleFactor}
           shadowColor="black"
-          shadowBlur={4}
+          shadowBlur={4 * scaleFactor}
           shadowOpacity={0.9}
-          shadowOffset={{ x: 1, y: 1 }}
+          shadowOffset={{ x: 1 * scaleFactor, y: 1 * scaleFactor }}
         />
       )}
     </Group>

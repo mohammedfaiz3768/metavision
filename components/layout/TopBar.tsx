@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users } from "lucide-react";
+import { LogOut, Users, User, Settings } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +43,10 @@ export function TopBar() {
     if (pathname.startsWith("/top-teams-analysis")) return "Top Teams Tactical Library";
     if (pathname.startsWith("/team")) return "Roster Management";
     if (pathname.startsWith("/owner")) return "Owner Administration Portal";
+    if (pathname.startsWith("/video-analysis")) return "Tactical Video Analyzer";
+    if (pathname.startsWith("/recruitment")) return "Gamer Recruitment Board";
+    if (pathname.startsWith("/profile")) return "Player Settings Workspace";
+    if (pathname.startsWith("/players")) return "Tactical Player Profile";
     return "Whiteboard Tactical Center";
   };
 
@@ -102,6 +106,22 @@ export function TopBar() {
             
             <DropdownMenuSeparator className="bg-[#2A2B35]" />
             
+            <DropdownMenuItem 
+              onClick={() => router.push(`/players/${user?.id}`)} 
+              className="hover:bg-[#1E1F28] hover:text-white cursor-pointer"
+            >
+              <User className="mr-2 h-4 w-4 text-[#7C3AED]" />
+              <span className="text-xs">My Profile Card</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem 
+              onClick={() => router.push("/profile/edit")} 
+              className="hover:bg-[#1E1F28] hover:text-white cursor-pointer"
+            >
+              <Settings className="mr-2 h-4 w-4 text-[#7C3AED]" />
+              <span className="text-xs">Edit Profile Info</span>
+            </DropdownMenuItem>
+
             <DropdownMenuItem 
               onClick={() => router.push("/team")} 
               className="hover:bg-[#1E1F28] hover:text-white cursor-pointer"

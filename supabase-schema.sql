@@ -8,7 +8,14 @@ CREATE TABLE profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
   avatar_url TEXT,
-  role TEXT NOT NULL DEFAULT 'player' CHECK (role IN ('player','coach','analyst','admin')),
+  role TEXT NOT NULL DEFAULT 'player',
+  full_name TEXT,
+  age INT CHECK (age BETWEEN 10 AND 60),
+  in_game_name TEXT,
+  bio TEXT,
+  social_links JSONB DEFAULT '{}'::jsonb,
+  show_team_on_profile BOOLEAN DEFAULT TRUE,
+  profile_complete BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -430,4 +437,162 @@ CREATE POLICY callouts_write ON building_callouts FOR ALL
         AND team_members.role IN ('coach', 'analyst', 'IGL')
     )
   );
+
+
+-- ============================================================
+-- 12. PHASE 5 FEATURES: VIDEO PLAYER & RECRUITMENT MARKETPLACE
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS match_videos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+  uploaded_by UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  title TEXT NOT NULL,
+  video_url TEXT NOT NULL,
+  duration_seconds FLOAT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS video_annotations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  video_id UUID REFERENCES match_videos(id) ON DELETE CASCADE NOT NULL,
+  created_by UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  timestamp_seconds FLOAT NOT NULL,
+  canvas_data JSONB NOT NULL DEFAULT '{}'::jsonb,
+  note TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS recruitment_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  posted_by UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+  post_type TEXT NOT NULL CHECK (post_type IN ('player_seeking_team', 'team_seeking_player')),
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  roles JSONB NOT NULL DEFAULT '[]'::jsonb,
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closed')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS recruitment_threads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID REFERENCES recruitment_posts(id) ON DELETE CASCADE NOT NULL,
+  applicant_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  post_owner_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  is_active BOOLEAN DEFAULT TRUE,
+  CONSTRAINT unique_post_applicant UNIQUE (post_id, applicant_id)
+);
+
+CREATE TABLE IF NOT EXISTS recruitment_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  thread_id UUID REFERENCES recruitment_threads(id) ON DELETE CASCADE NOT NULL,
+  sender_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  content TEXT NOT NULL,
+  sent_at TIMESTAMPTZ DEFAULT NOW(),
+  is_read BOOLEAN DEFAULT FALSE
+);
+
+ALTER TABLE match_videos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE video_annotations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE recruitment_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE recruitment_threads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE recruitment_messages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY match_videos_select ON match_videos FOR SELECT USING (
+  (team_id IS NULL AND uploaded_by = auth.uid()) OR
+  EXISTS (
+    SELECT 1 FROM team_members 
+    WHERE team_members.team_id = match_videos.team_id 
+      AND team_members.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY match_videos_insert ON match_videos FOR INSERT WITH CHECK (
+  uploaded_by = auth.uid() AND (
+    team_id IS NULL OR EXISTS (
+      SELECT 1 FROM team_members 
+      WHERE team_members.team_id = match_videos.team_id 
+        AND team_members.user_id = auth.uid()
+        AND team_members.role IN ('coach', 'analyst', 'IGL')
+    )
+  )
+);
+
+CREATE POLICY video_annotations_select ON video_annotations FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM match_videos 
+    WHERE match_videos.id = video_annotations.video_id
+      AND (
+        (match_videos.team_id IS NULL AND match_videos.uploaded_by = auth.uid()) OR
+        EXISTS (
+          SELECT 1 FROM team_members 
+          WHERE team_members.team_id = match_videos.team_id 
+            AND team_members.user_id = auth.uid()
+        )
+      )
+  )
+);
+
+CREATE POLICY video_annotations_modify ON video_annotations FOR ALL USING (
+  created_by = auth.uid() AND EXISTS (
+    SELECT 1 FROM match_videos
+    WHERE match_videos.id = video_annotations.video_id
+      AND (
+        match_videos.team_id IS NULL OR EXISTS (
+          SELECT 1 FROM team_members 
+          WHERE team_members.team_id = match_videos.team_id 
+            AND team_members.user_id = auth.uid()
+            AND team_members.role IN ('coach', 'analyst', 'IGL')
+        )
+      )
+  )
+);
+
+CREATE POLICY recruitment_posts_select ON recruitment_posts FOR SELECT USING (
+  status = 'open' OR posted_by = auth.uid()
+);
+
+CREATE POLICY recruitment_posts_modify ON recruitment_posts FOR ALL USING (
+  posted_by = auth.uid()
+);
+
+CREATE POLICY recruitment_threads_access ON recruitment_threads FOR ALL USING (
+  applicant_id = auth.uid() OR post_owner_id = auth.uid()
+);
+
+CREATE POLICY recruitment_messages_select ON recruitment_messages FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM recruitment_threads 
+    WHERE recruitment_threads.id = recruitment_messages.thread_id
+      AND (recruitment_threads.applicant_id = auth.uid() OR recruitment_threads.post_owner_id = auth.uid())
+  )
+);
+
+CREATE POLICY recruitment_messages_insert ON recruitment_messages FOR INSERT WITH CHECK (
+  sender_id = auth.uid() AND EXISTS (
+    SELECT 1 FROM recruitment_threads 
+    WHERE recruitment_threads.id = recruitment_messages.thread_id
+      AND recruitment_threads.is_active = TRUE
+      AND (recruitment_threads.applicant_id = auth.uid() OR recruitment_threads.post_owner_id = auth.uid())
+  )
+);
+
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES 
+  ('match-videos', 'match-videos', TRUE, 2684354560, ARRAY['video/mp4', 'video/webm']),
+  ('profile-photos', 'profile-photos', TRUE, 3145728, ARRAY['image/png', 'image/jpeg', 'image/jpg', 'image/webp'])
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "match-videos-read" ON storage.objects FOR SELECT USING (bucket_id = 'match-videos');
+CREATE POLICY "match-videos-upload" ON storage.objects FOR INSERT WITH CHECK (
+  bucket_id = 'match-videos' AND auth.role() = 'authenticated'
+);
+
+CREATE POLICY "profile-photos-read" ON storage.objects FOR SELECT USING (bucket_id = 'profile-photos');
+CREATE POLICY "profile-photos-upload" ON storage.objects FOR INSERT WITH CHECK (
+  bucket_id = 'profile-photos' AND auth.role() = 'authenticated'
+);
 

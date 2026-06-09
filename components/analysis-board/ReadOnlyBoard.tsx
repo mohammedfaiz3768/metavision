@@ -7,6 +7,7 @@ import { getMapConfig } from "@/lib/whiteboard/map-config";
 import { NodeRenderer } from "@/components/whiteboard/renderers/NodeRenderer";
 import { Loader2, Layers, Eye, EyeOff } from "lucide-react";
 import type { MapId, CanvasNode } from "@/lib/types/app.types";
+import { useCanvasStore } from "@/lib/whiteboard/canvas-store";
 
 interface ReadOnlyBoardProps {
   mapId: MapId;
@@ -63,6 +64,8 @@ export function ReadOnlyBoard({ mapId, canvasData, interactive = true, fit = "co
               scaleX: scale,
               scaleY: scale,
             });
+            useCanvasStore.getState().setFitScale(scale);
+            useCanvasStore.getState().setViewport({ scaleX: scale, scaleY: scale });
           }
         }
       };
@@ -108,6 +111,7 @@ export function ReadOnlyBoard({ mapId, canvasData, interactive = true, fit = "co
       scaleX: newScale,
       scaleY: newScale,
     });
+    useCanvasStore.getState().setViewport({ scaleX: newScale, scaleY: newScale });
   };
 
   const handleDragEnd = (e: any) => {

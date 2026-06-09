@@ -41,6 +41,7 @@ interface CanvasState {
 
   // Viewport
   viewport: Viewport;
+  fitScale: number;
 
   // Modern Layer system (Allows reordering, custom names, lock & hide)
   layers: TacticalLayer[];
@@ -100,6 +101,7 @@ interface CanvasState {
   // Viewport
   setViewport: (viewport: Partial<Viewport>) => void;
   resetViewport: () => void;
+  setFitScale: (scale: number) => void;
 
   // Layer Actions
   addCustomLayer: (name: string) => void;
@@ -161,6 +163,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   snapToGrid: false,
 
   viewport: { x: 0, y: 0, scaleX: 1, scaleY: 1 },
+  fitScale: 0.65,
 
   // Default tactical layer structures
   layers: [
@@ -336,6 +339,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
   resetViewport: () =>
     set({ viewport: { x: 0, y: 0, scaleX: 1, scaleY: 1 } }),
+
+  setFitScale: (scale) => set({ fitScale: scale }),
 
   // ---- Layer Actions ----
 

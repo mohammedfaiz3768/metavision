@@ -72,6 +72,7 @@ export function WhiteboardCanvas({
     pendingLogo,
     setPendingLogo,
     setTool,
+    setFitScale,
   } = useCanvasStore();
 
   // Load Map config and Preload image
@@ -111,6 +112,7 @@ export function WhiteboardCanvas({
               scaleX: scale,
               scaleY: scale,
             });
+            setFitScale(scale);
           }
         }
       };

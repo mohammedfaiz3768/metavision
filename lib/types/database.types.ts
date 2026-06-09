@@ -18,21 +18,42 @@ export interface Database {
           id: string;
           username: string;
           avatar_url: string | null;
-          role: 'player' | 'coach' | 'analyst' | 'admin';
+          role: 'player' | 'coach' | 'analyst' | 'admin' | string;
+          full_name: string | null;
+          age: number | null;
+          in_game_name: string | null;
+          bio: string | null;
+          social_links: Json | null;
+          show_team_on_profile: boolean;
+          profile_complete: boolean;
           created_at: string;
         };
         Insert: {
           id: string;
           username: string;
           avatar_url?: string | null;
-          role?: 'player' | 'coach' | 'analyst' | 'admin';
+          role?: 'player' | 'coach' | 'analyst' | 'admin' | string;
+          full_name?: string | null;
+          age?: number | null;
+          in_game_name?: string | null;
+          bio?: string | null;
+          social_links?: Json | null;
+          show_team_on_profile?: boolean;
+          profile_complete?: boolean;
           created_at?: string;
         };
         Update: {
           id?: string;
           username?: string;
           avatar_url?: string | null;
-          role?: 'player' | 'coach' | 'analyst' | 'admin';
+          role?: 'player' | 'coach' | 'analyst' | 'admin' | string;
+          full_name?: string | null;
+          age?: number | null;
+          in_game_name?: string | null;
+          bio?: string | null;
+          social_links?: Json | null;
+          show_team_on_profile?: boolean;
+          profile_complete?: boolean;
           created_at?: string;
         };
       };
@@ -289,6 +310,186 @@ export interface Database {
           max_uses?: number;
           uses?: number;
           expires_at?: string;
+          created_at?: string;
+        };
+      };
+      match_videos: {
+        Row: {
+          id: string;
+          team_id: string | null;
+          uploaded_by: string;
+          title: string;
+          video_url: string;
+          duration_seconds: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          team_id?: string | null;
+          uploaded_by: string;
+          title: string;
+          video_url: string;
+          duration_seconds?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          team_id?: string | null;
+          uploaded_by?: string;
+          title?: string;
+          video_url?: string;
+          duration_seconds?: number;
+          created_at?: string;
+        };
+      };
+      video_annotations: {
+        Row: {
+          id: string;
+          video_id: string;
+          created_by: string;
+          timestamp_seconds: number;
+          canvas_data: Json;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          video_id: string;
+          created_by: string;
+          timestamp_seconds: number;
+          canvas_data?: Json;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          video_id?: string;
+          created_by?: string;
+          timestamp_seconds?: number;
+          canvas_data?: Json;
+          note?: string | null;
+          created_at?: string;
+        };
+      };
+      recruitment_posts: {
+        Row: {
+          id: string;
+          posted_by: string;
+          team_id: string | null;
+          post_type: 'player_seeking_team' | 'team_seeking_player';
+          title: string;
+          description: string;
+          roles: Json;
+          status: 'open' | 'closed';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          posted_by: string;
+          team_id?: string | null;
+          post_type: 'player_seeking_team' | 'team_seeking_player';
+          title: string;
+          description: string;
+          roles?: Json;
+          status?: 'open' | 'closed';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          posted_by?: string;
+          team_id?: string | null;
+          post_type?: 'player_seeking_team' | 'team_seeking_player';
+          title?: string;
+          description?: string;
+          roles?: Json;
+          status?: 'open' | 'closed';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      recruitment_threads: {
+        Row: {
+          id: string;
+          post_id: string;
+          applicant_id: string;
+          post_owner_id: string;
+          created_at: string;
+          is_active: boolean;
+        };
+        Insert: {
+          id?: string;
+          post_id: string;
+          applicant_id: string;
+          post_owner_id: string;
+          created_at?: string;
+          is_active?: boolean;
+        };
+        Update: {
+          id?: string;
+          post_id?: string;
+          applicant_id?: string;
+          post_owner_id?: string;
+          created_at?: string;
+          is_active?: boolean;
+        };
+      };
+      recruitment_messages: {
+        Row: {
+          id: string;
+          thread_id: string;
+          sender_id: string;
+          content: string;
+          sent_at: string;
+          is_read: boolean;
+        };
+        Insert: {
+          id?: string;
+          thread_id: string;
+          sender_id: string;
+          content: string;
+          sent_at?: string;
+          is_read?: boolean;
+        };
+        Update: {
+          id?: string;
+          thread_id?: string;
+          sender_id?: string;
+          content?: string;
+          sent_at?: string;
+          is_read?: boolean;
+        };
+      };
+      scrim_round_players: {
+        Row: {
+          id: string;
+          round_id: string;
+          player_id: string | null;
+          player_name: string;
+          kills: number;
+          damage: number;
+          survived: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          round_id: string;
+          player_id?: string | null;
+          player_name: string;
+          kills?: number;
+          damage?: number;
+          survived?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          round_id?: string;
+          player_id?: string | null;
+          player_name?: string;
+          kills?: number;
+          damage?: number;
+          survived?: boolean;
           created_at?: string;
         };
       };

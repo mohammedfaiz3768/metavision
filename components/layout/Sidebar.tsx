@@ -20,6 +20,8 @@ import {
   LogOut,
   ShieldAlert,
   MessageSquare,
+  Video,
+  Megaphone,
 } from "lucide-react";
 
 const navItems = [
@@ -32,6 +34,8 @@ const navItems = [
   { href: "/tournaments", label: "Tournaments", icon: Trophy },
   { href: "/team", label: "Team", icon: Users },
   { href: "/communication", label: "Callouts", icon: MessageSquare },
+  { href: "/video-analysis", label: "Video Analysis", icon: Video },
+  { href: "/recruitment", label: "Recruitment", icon: Megaphone },
 ];
 
 export function Sidebar() {

@@ -49,6 +49,35 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Redirect users with incomplete profiles to /profile/setup on first login
+  if (user) {
+    const isProfileSetupRoute = request.nextUrl.pathname === "/profile/setup";
+    const isPageRoute = 
+      !request.nextUrl.pathname.startsWith("/_next") &&
+      !request.nextUrl.pathname.startsWith("/api") &&
+      !request.nextUrl.pathname.includes(".");
+
+    if (isPageRoute) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("profile_complete")
+        .eq("id", user.id)
+        .single();
+
+      const isComplete = profile?.profile_complete ?? false;
+
+      if (!isComplete && !isProfileSetupRoute) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/profile/setup";
+        return NextResponse.redirect(url);
+      } else if (isComplete && isProfileSetupRoute) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/dashboard";
+        return NextResponse.redirect(url);
+      }
+    }
+  }
+
   // Redirect authenticated users away from auth pages
   const isAuthRoute =
     request.nextUrl.pathname === "/login" ||
